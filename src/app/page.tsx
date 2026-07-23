@@ -569,9 +569,9 @@ export default function LandingPage() {
             <span className="font-bold text-slate-300">CREATIX-CRM</span> &copy; 2026. Todos los derechos reservados.
           </div>
           <div className="flex gap-6">
-            <a href="#privacy" className="hover:text-slate-300 transition-colors">Política de Privacidad</a>
-            <a href="#terms" className="hover:text-slate-300 transition-colors">Términos y Condiciones</a>
-            <a href="#data-handling" className="hover:text-slate-300 transition-colors">Tratamiento de Datos</a>
+            <a href="/privacy" className="hover:text-slate-300 transition-colors">Política de Privacidad</a>
+            <a href="/terms" className="hover:text-slate-300 transition-colors">Términos y Condiciones</a>
+            <a href="/data-handling" className="hover:text-slate-300 transition-colors">Tratamiento de Datos</a>
           </div>
         </div>
       </footer>
