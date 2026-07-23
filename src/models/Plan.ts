@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IPlan extends Document {
   name: string;
-  code: 'PLAN_INICIAL' | 'PLAN_PROFESIONAL' | 'PLAN_EMPRESARIAL';
+  code: 'PLAN_GRATIS' | 'PLAN_INICIAL' | 'PLAN_PROFESIONAL' | 'PLAN_EMPRESARIAL';
   maxUsers: number;
   maxCompanies: number;
   maxContacts: number;
@@ -10,6 +10,7 @@ export interface IPlan extends Document {
   maxAutomations: number;
   features: string[];
   price: number;
+  discountPercent: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,7 +20,7 @@ const PlanSchema = new Schema<IPlan>(
     name: { type: String, required: true, trim: true },
     code: {
       type: String,
-      enum: ['PLAN_INICIAL', 'PLAN_PROFESIONAL', 'PLAN_EMPRESARIAL'],
+      enum: ['PLAN_GRATIS', 'PLAN_INICIAL', 'PLAN_PROFESIONAL', 'PLAN_EMPRESARIAL'],
       required: true,
       unique: true,
     },
@@ -30,13 +31,17 @@ const PlanSchema = new Schema<IPlan>(
     maxAutomations: { type: Number, required: true },
     features: [{ type: String }],
     price: { type: Number, required: true, default: 0 },
+    discountPercent: { type: Number, required: true, default: 0 },
   },
   {
     timestamps: true,
   }
 );
 
-const Plan: Model<IPlan> =
-  mongoose.models.Plan || mongoose.model<IPlan>('Plan', PlanSchema);
+if (mongoose.models.Plan) {
+  delete (mongoose.models as any).Plan;
+}
+
+const Plan: Model<IPlan> = mongoose.model<IPlan>('Plan', PlanSchema);
 
 export default Plan;

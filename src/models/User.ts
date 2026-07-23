@@ -8,6 +8,7 @@ export interface IUser extends Document {
   image?: string;
   status: 'active' | 'inactive' | 'suspended';
   isSuperAdmin: boolean;
+  verificationToken?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +25,7 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: { type: String },
     emailVerified: { type: Date, default: null },
+    verificationToken: { type: String, default: null },
     image: { type: String, trim: true },
     isSuperAdmin: { type: Boolean, default: false },
     status: {
@@ -41,7 +43,10 @@ const UserSchema = new Schema<IUser>(
 // Indexes
 UserSchema.index({ status: 1 });
 
-const User: Model<IUser> =
-  mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+if (mongoose.models.User) {
+  delete (mongoose.models as any).User;
+}
+
+const User: Model<IUser> = mongoose.model<IUser>('User', UserSchema);
 
 export default User;

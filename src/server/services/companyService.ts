@@ -3,6 +3,7 @@ import { getTenantContext, assertRole } from '../permissions/tenant';
 import { writeAuditLog } from '../audit/audit';
 import { companySchema } from '@/schemas/company';
 import mongoose from 'mongoose';
+import { getTenantLimitStatus } from './limitsService';
 
 interface GetCompaniesParams {
   page?: number;
@@ -162,6 +163,12 @@ export async function createCompany(data: any): Promise<ICompany> {
 
   if (!organizationId) {
     throw new Error('Tenant organization ID is missing in context');
+  }
+
+  // Check company limits
+  const limitStatus = await getTenantLimitStatus(organizationId, 'companies');
+  if (!limitStatus.allowed) {
+    throw new Error(`Límite alcanzado: Su plan actual solo le permite registrar hasta ${limitStatus.limit} empresas. Mejore su plan en Configuración para registrar más.`);
   }
 
   // Validate fields

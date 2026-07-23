@@ -7,6 +7,7 @@ export const companySchema = z.object({
     .max(150, { message: 'La razón social no debe superar los 150 caracteres' }),
   nit: z.string().max(50).optional().or(z.literal('')),
   actividad: z.string().max(100).optional().or(z.literal('')),
+  category: z.string().optional().or(z.literal('')),
   dirComercial: z.string().max(250).optional().or(z.literal('')),
   munComercial: z.string().max(100).optional().or(z.literal('')),
   telCom1: z.string().max(30).optional().or(z.literal('')),

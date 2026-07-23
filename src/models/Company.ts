@@ -5,6 +5,7 @@ export interface ICompany extends Document {
   razonSocial: string; // Renamed from commercialName
   nit?: string; // Renamed from taxId
   actividad?: string; // Renamed from sector
+  category?: string;
   dirComercial?: string; // Renamed from address
   munComercial?: string; // Renamed from city
   telCom1?: string; // Renamed from phone
@@ -58,6 +59,7 @@ const CompanySchema = new Schema<ICompany>(
     razonSocial: { type: String, required: true, trim: true },
     nit: { type: String, trim: true },
     actividad: { type: String, trim: true },
+    category: { type: String, trim: true },
     dirComercial: { type: String, trim: true },
     munComercial: { type: String, trim: true },
     telCom1: { type: String, trim: true },

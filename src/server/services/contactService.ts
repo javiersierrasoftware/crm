@@ -3,6 +3,7 @@ import { getTenantContext, assertRole } from '../permissions/tenant';
 import { writeAuditLog } from '../audit/audit';
 import { contactSchema } from '@/schemas/contact';
 import mongoose from 'mongoose';
+import { getTenantLimitStatus } from './limitsService';
 
 interface GetContactsParams {
   page?: number;
@@ -139,6 +140,12 @@ export async function createContact(data: any): Promise<IContact> {
 
   if (!organizationId) {
     throw new Error('Tenant organization ID is missing in context');
+  }
+
+  // Check contact limits
+  const limitStatus = await getTenantLimitStatus(organizationId, 'contacts');
+  if (!limitStatus.allowed) {
+    throw new Error(`Límite alcanzado: Su plan actual solo le permite registrar hasta ${limitStatus.limit} contactos. Mejore su plan en Configuración para registrar más.`);
   }
 
   // Validate fields

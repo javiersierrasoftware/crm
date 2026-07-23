@@ -15,7 +15,10 @@ import {
   Settings,
   ArrowRight,
   Globe,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
+import { submitLandingFormAction } from '@/server/actions/landingActions';
 
 export default function LandingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -26,17 +29,48 @@ export default function LandingPage() {
   const [demoForm, setDemoForm] = useState({ name: '', email: '', company: '', size: 'micro' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
-  const handleDemoSubmit = (e: React.FormEvent) => {
+  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
+  const [demoError, setDemoError] = useState('');
+  const [isContactSubmitting, setIsContactSubmitting] = useState(false);
+  const [contactError, setContactError] = useState('');
+
+  const handleDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (demoForm.name && demoForm.email) {
-      setDemoSubmitted(true);
+    if (demoForm.name && demoForm.email && demoForm.company) {
+      setIsDemoSubmitting(true);
+      setDemoError('');
+      try {
+        const res = await submitLandingFormAction('demo', demoForm);
+        if (res.success) {
+          setDemoSubmitted(true);
+        } else {
+          setDemoError(res.error || 'Error al enviar la solicitud.');
+        }
+      } catch (err) {
+        setDemoError('Error de red al enviar la solicitud.');
+      } finally {
+        setIsDemoSubmitting(false);
+      }
     }
   };
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (contactForm.name && contactForm.email && contactForm.message) {
-      setContactSubmitted(true);
+      setIsContactSubmitting(true);
+      setContactError('');
+      try {
+        const res = await submitLandingFormAction('contact', contactForm);
+        if (res.success) {
+          setContactSubmitted(true);
+        } else {
+          setContactError(res.error || 'Error al enviar el mensaje.');
+        }
+      } catch (err) {
+        setContactError('Error de red al enviar el mensaje.');
+      } finally {
+        setIsContactSubmitting(false);
+      }
     }
   };
 
@@ -45,9 +79,25 @@ export default function LandingPage() {
   };
 
   const pricing = {
-    PLAN_INICIAL: { monthly: 29, yearly: 24 },
-    PLAN_PROFESIONAL: { monthly: 79, yearly: 64 },
-    PLAN_EMPRESARIAL: { monthly: 249, yearly: 199 },
+    PLAN_GRATIS: 0,
+    PLAN_INICIAL: 29000,
+    PLAN_PROFESIONAL: 89000,
+    PLAN_EMPRESARIAL: 249000,
+  };
+
+  const formatPrice = (planCode: keyof typeof pricing) => {
+    const base = pricing[planCode];
+    if (base === 0) return '$0';
+    if (billingPeriod === 'monthly') {
+      return `$${base.toLocaleString('es-CO')}`;
+    } else {
+      const yearlyVal = Math.round(base * 12 * 0.80);
+      return `$${yearlyVal.toLocaleString('es-CO')}`;
+    }
+  };
+
+  const getPeriodLabel = () => {
+    return billingPeriod === 'monthly' ? '/ mes' : '/ año';
   };
 
   return (
@@ -97,7 +147,7 @@ export default function LandingPage() {
       <section className="relative pt-20 pb-24 md:pt-32 md:pb-36 max-w-7xl mx-auto px-6 text-center">
         <div className="inline-flex items-center gap-2 bg-indigo-950/50 border border-indigo-900/50 rounded-full px-4 py-1.5 text-xs font-semibold text-indigo-400 mb-8 backdrop-blur-sm">
           <span className="flex h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
-          CREATIX CRM SaaS Multiempresa v1.0
+          CREATIX CRM SaaS Multiempresa
         </div>
 
         <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white max-w-4xl mx-auto leading-tight mb-8">
@@ -214,94 +264,122 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-lg">
               <button
                 onClick={() => setBillingPeriod('monthly')}
-                className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${
-                  billingPeriod === 'monthly' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
-                }`}
+                className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${billingPeriod === 'monthly' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
               >
                 Mensual
               </button>
               <button
                 onClick={() => setBillingPeriod('yearly')}
-                className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${
-                  billingPeriod === 'yearly' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
-                }`}
+                className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${billingPeriod === 'yearly' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
               >
                 Anual (20% Desc)
               </button>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
-            {/* Plan Inicial */}
-            <div className="bg-slate-900/50 border border-slate-800/80 p-8 rounded-2xl relative">
-              <h3 className="text-lg font-bold text-white mb-2">Plan Inicial</h3>
-              <p className="text-slate-400 text-xs mb-6">Para equipos comerciales pequeños.</p>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-white">
-                  ${billingPeriod === 'monthly' ? pricing.PLAN_INICIAL.monthly : pricing.PLAN_INICIAL.yearly}
-                </span>
-                <span className="text-slate-400 text-xs">/ mes</span>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-16">
+            {/* Plan Gratis */}
+            <div className="bg-slate-900/50 border border-slate-800/80 p-6 rounded-2xl relative flex flex-col justify-between">
+              <div>
+                <h3 className="text-md font-bold text-white mb-1">Plan Gratis</h3>
+                <p className="text-slate-400 text-[10px] mb-4">Para explorar el CRM sin costo.</p>
+                <div className="flex items-baseline gap-1 mb-5">
+                  <span className="text-3xl font-extrabold text-white">
+                    $0
+                  </span>
+                  <span className="text-slate-400 text-[10px]">{getPeriodLabel()}</span>
+                </div>
+                <ul className="space-y-2 text-[11px] text-slate-300 mb-6">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> 1 usuario asesor</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 10 empresas</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 50 contactos</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> 100 correos mensuales</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Reportes básicos</li>
+                </ul>
               </div>
-              <ul className="space-y-3 text-xs text-slate-300 mb-8">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Hasta 3 usuarios</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Hasta 5.000 empresas</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Hasta 10.000 contactos</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> 5.000 correos mensuales</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> 5 automatizaciones activas</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Reportes básicos</li>
-              </ul>
-              <a href="/register" className="block text-center bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-lg text-xs transition-colors">
+              <a href="/register" className="block text-center bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-xs transition-colors mt-auto">
+                Comenzar Gratis
+              </a>
+            </div>
+
+            {/* Plan Inicial */}
+            <div className="bg-slate-900/50 border border-slate-800/80 p-6 rounded-2xl relative flex flex-col justify-between">
+              <div>
+                <h3 className="text-md font-bold text-white mb-1">Plan Inicial</h3>
+                <p className="text-slate-400 text-[10px] mb-4">Para equipos comerciales pequeños.</p>
+                <div className="flex items-baseline gap-1 mb-5">
+                  <span className="text-3xl font-extrabold text-white">
+                    {formatPrice('PLAN_INICIAL')}
+                  </span>
+                  <span className="text-slate-400 text-[10px]">{getPeriodLabel()}</span>
+                </div>
+                <ul className="space-y-2 text-[11px] text-slate-300 mb-6">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 3 usuarios</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 5.000 empresas</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 10.000 contactos</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> 5.000 correos mensuales</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> 5 automatizaciones</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Reportes básicos</li>
+                </ul>
+              </div>
+              <a href="/register" className="block text-center bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-xs transition-colors mt-auto">
                 Comenzar Prueba
               </a>
             </div>
 
             {/* Plan Profesional */}
-            <div className="bg-slate-900/80 border-2 border-indigo-600 p-8 rounded-2xl relative shadow-xl shadow-indigo-500/5">
-              <div className="absolute -top-3 right-6 bg-indigo-600 text-white text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full">
+            <div className="bg-slate-900/80 border-2 border-indigo-600 p-6 rounded-2xl relative shadow-xl shadow-indigo-500/5 flex flex-col justify-between">
+              <div className="absolute -top-3 right-6 bg-indigo-600 text-white text-[9px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full">
                 Recomendado
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Plan Profesional</h3>
-              <p className="text-slate-400 text-xs mb-6">Para empresas en pleno crecimiento comercial.</p>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-white">
-                  ${billingPeriod === 'monthly' ? pricing.PLAN_PROFESIONAL.monthly : pricing.PLAN_PROFESIONAL.yearly}
-                </span>
-                <span className="text-slate-400 text-xs">/ mes</span>
+              <div>
+                <h3 className="text-md font-bold text-white mb-1">Plan Profesional</h3>
+                <p className="text-slate-400 text-[10px] mb-4">Para empresas en crecimiento comercial.</p>
+                <div className="flex items-baseline gap-1 mb-5">
+                  <span className="text-3xl font-extrabold text-white">
+                    {formatPrice('PLAN_PROFESIONAL')}
+                  </span>
+                  <span className="text-slate-400 text-[10px]">{getPeriodLabel()}</span>
+                </div>
+                <ul className="space-y-2 text-[11px] text-slate-300 mb-6">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 10 usuarios</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 25.000 empresas</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Hasta 50.000 contactos</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> 30.000 correos mensuales</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> 15 automatizaciones</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Campos personalizados</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Reportes avanzados</li>
+                </ul>
               </div>
-              <ul className="space-y-3 text-xs text-slate-300 mb-8">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Hasta 10 usuarios</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Hasta 25.000 empresas</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Hasta 50.000 contactos</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> 30.000 correos mensuales</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> 15 automatizaciones activas</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Campos personalizados</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Reportes avanzados</li>
-              </ul>
-              <a href="/register" className="block text-center bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow-md shadow-indigo-600/25">
+              <a href="/register" className="block text-center bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-xs transition-all shadow-md shadow-indigo-600/25 mt-auto">
                 Comenzar Prueba
               </a>
             </div>
 
             {/* Plan Empresarial */}
-            <div className="bg-slate-900/50 border border-slate-800/80 p-8 rounded-2xl relative">
-              <h3 className="text-lg font-bold text-white mb-2">Plan Empresarial</h3>
-              <p className="text-slate-400 text-xs mb-6">Para grandes volúmenes de envío y soporte VIP.</p>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-white">
-                  ${billingPeriod === 'monthly' ? pricing.PLAN_EMPRESARIAL.monthly : pricing.PLAN_EMPRESARIAL.yearly}
-                </span>
-                <span className="text-slate-400 text-xs">/ mes</span>
+            <div className="bg-slate-900/50 border border-slate-800/80 p-6 rounded-2xl relative flex flex-col justify-between">
+              <div>
+                <h3 className="text-md font-bold text-white mb-1">Plan Empresarial</h3>
+                <p className="text-slate-400 text-[10px] mb-4">Para grandes volúmenes y soporte VIP.</p>
+                <div className="flex items-baseline gap-1 mb-5">
+                  <span className="text-3xl font-extrabold text-white">
+                    {formatPrice('PLAN_EMPRESARIAL')}
+                  </span>
+                  <span className="text-slate-400 text-[10px]">{getPeriodLabel()}</span>
+                </div>
+                <ul className="space-y-2 text-[11px] text-slate-300 mb-6">
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Usuarios ilimitados</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Empresas configurables</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Contactos ilimitados</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Correos configurables</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Automatizaciones avanzadas</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Soporte prioritario 24/7</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" /> Auditoría de accesos</li>
+                </ul>
               </div>
-              <ul className="space-y-3 text-xs text-slate-300 mb-8">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Usuarios ilimitados</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Empresas configurables</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Contactos ilimitados</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Correos configurables</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Automatizaciones avanzadas</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Soporte prioritario 24/7</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-indigo-500" /> Auditoría de accesos total</li>
-              </ul>
-              <a href="/register" className="block text-center bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-lg text-xs transition-colors">
+              <a href="/register" className="block text-center bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-xs transition-colors mt-auto">
                 Contactar Ventas
               </a>
             </div>
@@ -328,6 +406,12 @@ export default function LandingPage() {
               </div>
             ) : (
               <form onSubmit={handleDemoSubmit} className="space-y-4">
+                {demoError && (
+                  <div className="bg-rose-950/40 border border-rose-900 text-rose-400 text-xs p-3 rounded-xl flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{demoError}</span>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">Nombre Completo</label>
                   <input
@@ -363,8 +447,10 @@ export default function LandingPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm transition-all shadow-md shadow-indigo-600/20"
+                  disabled={isDemoSubmitting}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
+                  {isDemoSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Confirmar Solicitud
                 </button>
               </form>
@@ -423,6 +509,12 @@ export default function LandingPage() {
               </div>
             ) : (
               <form onSubmit={handleContactSubmit} className="space-y-4">
+                {contactError && (
+                  <div className="bg-rose-950/40 border border-rose-900 text-rose-400 text-xs p-3 rounded-xl flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{contactError}</span>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">Nombre</label>
                   <input
@@ -458,8 +550,10 @@ export default function LandingPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm transition-all shadow-md shadow-indigo-600/20"
+                  disabled={isContactSubmitting}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
+                  {isContactSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Enviar Mensaje
                 </button>
               </form>

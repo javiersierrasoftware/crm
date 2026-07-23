@@ -32,7 +32,10 @@ export default async function SettingsPage() {
   const sub = await Subscription.findOne({ organizationId: activeOrgId }).populate('planId').lean();
   const plan = sub?.planId as any;
 
-  // 2. Fetch API Keys and initial Audit Logs
+  // 2. Fetch list of available plans for subscription checkout
+  const plans = await Plan.find().lean();
+
+  // 3. Fetch API Keys and initial Audit Logs
   const apiKeys = await getApiKeysAction();
   const auditLogsResult = await getAuditLogsAction(1, 10);
 
@@ -40,6 +43,7 @@ export default async function SettingsPage() {
   const serializedOrg = JSON.parse(JSON.stringify(org));
   const serializedSub = JSON.parse(JSON.stringify(sub));
   const serializedPlan = JSON.parse(JSON.stringify(plan));
+  const serializedPlans = JSON.parse(JSON.stringify(plans));
   const serializedApiKeys = JSON.parse(JSON.stringify(apiKeys));
   const serializedAuditLogs = JSON.parse(JSON.stringify(auditLogsResult));
 
@@ -48,6 +52,7 @@ export default async function SettingsPage() {
       organization={serializedOrg}
       subscription={serializedSub}
       plan={serializedPlan}
+      plans={serializedPlans}
       initialApiKeys={serializedApiKeys}
       initialAuditLogs={serializedAuditLogs}
     />

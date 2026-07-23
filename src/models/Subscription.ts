@@ -7,6 +7,7 @@ export interface ISubscription extends Document {
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   emailsSentThisPeriod: number;
+  companiesLoaded: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +34,7 @@ const SubscriptionSchema = new Schema<ISubscription>(
       default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     },
     emailsSentThisPeriod: { type: Number, required: true, default: 0 },
+    companiesLoaded: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -42,8 +44,11 @@ const SubscriptionSchema = new Schema<ISubscription>(
 // Indexes
 SubscriptionSchema.index({ status: 1 });
 
+if (mongoose.models.Subscription) {
+  delete (mongoose.models as any).Subscription;
+}
+
 const Subscription: Model<ISubscription> =
-  mongoose.models.Subscription ||
   mongoose.model<ISubscription>('Subscription', SubscriptionSchema);
 
 export default Subscription;

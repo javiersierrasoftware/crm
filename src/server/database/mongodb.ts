@@ -21,6 +21,7 @@ import '@/models/ApiKey';
 import '@/models/Notification';
 import '@/models/Template';
 import '@/models/CompanyLog';
+import '@/models/PendingPayment';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
