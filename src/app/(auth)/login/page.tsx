@@ -40,8 +40,9 @@ function LoginCard() {
         // Redirect to dashboard on success
         window.location.href = '/dashboard';
       }
-    } catch {
-      setErrorMessage('Error de red. Intente más tarde.');
+    } catch (err: any) {
+      console.error('Error en login:', err);
+      setErrorMessage(err?.message || 'Error de red o conexión con el servidor. Intente más tarde.');
       setIsLoading(false);
     }
   };

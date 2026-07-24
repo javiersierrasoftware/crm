@@ -43,8 +43,9 @@ export default function RegisterPage() {
         setErrorMessage(result.error || 'Error durante el registro');
         setIsLoading(false);
       }
-    } catch {
-      setErrorMessage('Error de red. Intente más tarde.');
+    } catch (err: any) {
+      console.error('Error en registro:', err);
+      setErrorMessage(err?.message || 'Error de red o conexión con el servidor. Intente más tarde.');
       setIsLoading(false);
     }
   };
