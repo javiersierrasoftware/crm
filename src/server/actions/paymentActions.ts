@@ -111,7 +111,7 @@ export async function getWompiPaymentDataAction(
       collect_shipping: false,
       currency: currency,
       amount_in_cents: amountInCents,
-      redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/dashboard/settings`,
+      redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard/settings`,
       sku: reference
     };
 

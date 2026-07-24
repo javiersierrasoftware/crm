@@ -184,7 +184,7 @@ export async function executeWorkflowStep(executionId: string) {
 
         if (contact && template && contact.subscriptionStatus === 'subscribed') {
           // Resolve standard dynamic variables
-          const appUrl = process.env.APP_URL || 'http://localhost:3000';
+          const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
           const unsubUrl = `${appUrl}/api/unsubscribe?email=${encodeURIComponent(
             contact.email
           )}&org=${organizationId}`;

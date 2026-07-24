@@ -210,7 +210,7 @@ export async function dispatchCampaignEmails(campaignId: string, actorId: string
     status: 'pending',
   }).populate('contactId');
 
-  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
   let deliveredCount = 0;
   let failedCount = 0;
